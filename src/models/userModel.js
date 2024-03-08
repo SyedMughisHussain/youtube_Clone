@@ -51,4 +51,37 @@ const userSchema = new Schema(
 
 const User = mongoose.model("User", userSchema);
 
+userSchema.pre("save", function (next) {
+  const user = this;
+
+  if (!user.isModified("password")) return next();
+
+  const salt = bcrypt.genSaltSync(10);
+  const hash = bcrypt.hashSync(user.password, salt);
+  user.password = hash;
+
+  next();
+});
+
+userSchema.methods.comparePassword = function (password) {
+  const user = this;
+  return bcrypt.compareSync(password, user.password);
+};
+
+userSchema.methods.generateAccessToken = function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id }, process.env.ACCESS_TOKEN_SECRET, {
+    expiresIn: process.env.ACCESS_TOKEN_SECRET_EXPIRY,
+  });
+  return token;
+};
+
+userSchema.methods.generateRefreshToken = function () {
+  const user = this;
+  const token = jwt.sign({ _id: user._id }, process.env.REFRESH_TOKEN_SECRET, {
+    expiresIn: process.env.REFRESH_TOKEN_SECRET_EXPIRY,
+  });
+  return token;
+};
+
 export default User;
