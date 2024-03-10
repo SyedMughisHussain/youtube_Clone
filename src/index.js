@@ -4,7 +4,7 @@ import dotenv from "dotenv";
 import cookieParser from "cookie-parser";
 
 // ========================Import Routes =========================
-import userRouter from "./routes/userRoutes.js" 
+import userRouter from "./routes/userRoutes.js";
 
 // ========================.env file config =========================
 dotenv.config({
@@ -17,8 +17,10 @@ const app = express();
 app.use(express.json());
 app.use(cors());
 app.use(cookieParser());
+app.use(express.urlencoded({ extended: true, limit: "16kb" }));
+app.use(express.static("public"));
 
 // ========================Routes MiddleWare=========================
-app.use('/api/v1/users', userRouter);
+app.use("/api/v1/users", userRouter);
 
 export default app;
