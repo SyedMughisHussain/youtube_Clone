@@ -5,6 +5,8 @@ import { uploadOnCloudinary } from "../utils/cloudinary.js";
 import { ApiResponse } from "../utils/ApiResponse.js";
 
 const registerUser = asyncHandler(async (req, res) => {
+
+  console.log(req.files)
   // get user details from frontend
   // validation - not empty
   // check if user already exists: username, email
@@ -28,7 +30,10 @@ const registerUser = asyncHandler(async (req, res) => {
     throw new ApiError("User is already wiht this username or password");
   }
 
+  // console.log(req.files);
+
   const avatarLocalPath = req.files?.avatar[0]?.path;
+  console.log(avatarLocalPath);
 
   let coverImageLocalPath;
   if (
@@ -64,4 +69,41 @@ const registerUser = asyncHandler(async (req, res) => {
     .json(new ApiResponse("User Created Successfuly.", 200, user));
 });
 
-export { registerUser };
+const loginUser = asyncHandler(async (req, res) => {
+  // req body -> data
+  // username or email
+  //find the user
+  //password check
+  //access and referesh token
+  //send cookie
+
+  const { email, password } = req.body;
+
+  if (email === "" || password === "") {
+    throw new ApiError("Please fill all fields", 400);
+  }
+
+  const user = await User.findOne({email});
+  console.log(user);
+
+  if (!user) {
+    throw new ApiError("User does not exist with this email or username.", 400);
+  }
+
+  const isPasswordCorrect = await user.comparePassword(password);
+  console.log(isPasswordCorrect);
+
+  if (!isPasswordCorrect) {
+    throw new ApiError("Incorrect password", 400);
+  }
+
+  const token = user.generateAccessToken();
+  const refreshToken = user.generateRefreshToken();
+
+  return res
+  .status(200)
+  .json(new ApiResponse("Login Successfuly.", 200, { token, refreshToken }));
+
+});
+
+export { registerUser, loginUser };
